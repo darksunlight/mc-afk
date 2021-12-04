@@ -17,6 +17,8 @@ let retries = 0;
 
 bot.on('spawn', () => {
     console.log('spawned');
+    bot.chat('Don\'t mind me, I\'m just afking');
+    bot.chat('/afk');
 });
 
 bot.on('kicked', (reason, loggedIn) => {
@@ -47,7 +49,7 @@ app.get('/', (req, res) => {
         ping: bot.player?.ping
     })
 });
-  
+
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`)
 });
