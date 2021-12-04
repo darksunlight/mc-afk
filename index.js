@@ -18,7 +18,6 @@ let retries = 0;
 bot.on('spawn', () => {
     console.log('spawned');
     bot.chat('Don\'t mind me, I\'m just afking');
-    bot.chat('/afk');
 });
 
 bot.on('kicked', (reason, loggedIn) => {
@@ -37,6 +36,12 @@ bot.on('kicked', (reason, loggedIn) => {
     }
 });
 bot.on('error', console.error);
+
+bot.on('chat', (username, message) => {
+    if (username === process.env.OWNER && message === 'Don\'t mind me, I\'m just afking') {
+        bot.chat('/afk');
+    }
+});
 
 app.get('/', (req, res) => {
     if (req.headers.authorization !== process.env.TOKEN) return res.status(403).send('go away');
