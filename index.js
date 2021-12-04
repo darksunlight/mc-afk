@@ -1,5 +1,10 @@
 require('dotenv').config();
 const mineflayer = require('mineflayer');
+
+const { Client, Intents } = require('discord.js');
+const client = new Client({ intents: new Intents(['GUILDS', 'GUILD_MESSAGES']) });
+let channel = null;
+
 const express = require('express');
 const app = express();
 const port = 3170;
@@ -13,34 +18,38 @@ const options = {
 };
 
 let bot = mineflayer.createBot(options);
-let retries = 0;
 
 bot.on('spawn', () => {
     console.log('spawned');
-    bot.chat('Don\'t mind me, I\'m just afking');
 });
 
-bot.on('kicked', (reason, loggedIn) => {
-    const reasonString = JSON.parse(reason).text;
-    console.error(reason, loggedIn);
-    if (retries > 2) process.exit(1);
-    retries++;
-    if (reasonString.startsWith("You must wait ")) {
-        setTimeout(() => {
-            bot = mineflayer.createBot(options);
-        }, +reasonString.match(/^You must wait (\d+) seconds? before logging-in again.$/)[1] * 1000);
-    } else {
-        setTimeout(() => {
-            bot = mineflayer.createBot(options);
-        }, 45000);
-    }
-});
+bot.on('kicked', console.error);
 bot.on('error', console.error);
 
-bot.on('chat', (username, message) => {
-    if (username === process.env.OWNER && message === 'Don\'t mind me, I\'m just afking') {
-        bot.chat('/afk');
+bot.on('message', (jsonMsg) => {
+    if (!channel) return;
+    if (jsonMsg.translate) {
+        channel.send(`(${jsonMsg.translate}: ${jsonMsg.with.map(x => x.text).join(', ')})`);
+        return;
     }
+    if (jsonMsg.extra) {
+        channel.send(jsonMsg.extra.map(x => x.bold ? `**${x.text}**` : x.text).join(''));
+        return;
+    }
+    channel.send(jsonMsg.text);
+})
+
+client.on('ready', () => {
+    console.log('discord bot ready');
+    channel = client.channels.cache.get(process.env.CHANNEL);
+});
+
+client.on('messageCreate', message => {
+    if (message.channel.id !== process.env.CHANNEL || message.author.bot) return;
+    if (message.content.startsWith('!')) {
+        return bot.chat('/' + message.content.slice(1));
+    }
+    bot.chat(message.content);
 });
 
 app.get('/', (req, res) => {
@@ -58,3 +67,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`)
 });
+
+client.login(process.env.DISCORD_TOKEN);
