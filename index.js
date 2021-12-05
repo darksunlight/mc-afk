@@ -29,14 +29,18 @@ bot.on('error', console.error);
 bot.on('message', (jsonMsg) => {
     if (!channel) return;
     if (jsonMsg.translate && jsonMsg.with) {
-        channel.send(`(${jsonMsg.translate}: ${jsonMsg.with.map(x => x.text).join(', ')})`);
+        channel.send(`(${jsonMsg.translate}: ${jsonMsg.with.map(x => x.text).join(', ')})`).catch(console.error);
         return;
     }
     if (jsonMsg.extra) {
-        channel.send(jsonMsg.extra.map(x => x.bold ? `**${x.text}**` : x.text).join(''));
+        channel.send(jsonMsg.extra.map(x => x.bold ? `**${x.text}**` : x.text).join('')).catch(console.error);
         return;
     }
-    channel.send(jsonMsg.text);
+    if (jsonMsg.text) {
+        channel.send(jsonMsg.text).catch(console.error);
+        return;
+    }
+    console.log(jsonMsg);
 })
 
 client.on('ready', () => {
