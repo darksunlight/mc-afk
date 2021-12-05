@@ -28,7 +28,7 @@ bot.on('error', console.error);
 
 bot.on('message', (jsonMsg) => {
     if (!channel) return;
-    if (jsonMsg.translate) {
+    if (jsonMsg.translate && jsonMsg.with) {
         channel.send(`(${jsonMsg.translate}: ${jsonMsg.with.map(x => x.text).join(', ')})`);
         return;
     }
