@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mineflayer = require('mineflayer');
+const emoji = require('node-emoji');
 
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: new Intents(['GUILDS', 'GUILD_MESSAGES']) });
@@ -53,8 +54,7 @@ client.on('messageCreate', message => {
     if (message.content.startsWith('!')) {
         return bot.chat('/' + message.content.slice(1));
     }
-    console.log(message.content);
-    bot.chat(message.content);
+    bot.chat(emoji.unemojify(message.content));
 });
 
 app.get('/', (req, res) => {
