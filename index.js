@@ -25,7 +25,10 @@ bot.on('spawn', () => {
 });
 
 bot.on('kicked', console.error);
-bot.on('error', console.error);
+bot.on('error', (err) => {
+    console.error(err);
+    process.exit(1);
+});
 
 bot.on('message', (jsonMsg) => {
     if (!channel) return;
