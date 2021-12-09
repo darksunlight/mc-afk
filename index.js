@@ -24,7 +24,10 @@ bot.on('spawn', () => {
     console.log('spawned');
 });
 
-bot.on('kicked', console.error);
+bot.on('kicked', (err) => {
+    console.error(err);
+    process.exit(1);
+});
 bot.on('error', (err) => {
     console.error(err);
     process.exit(1);
