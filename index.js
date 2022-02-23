@@ -10,45 +10,9 @@ const express = require('express');
 const app = express();
 const port = 3170;
 
-const options = {
-    host: process.env.HOST,
-    username: process.env.EMAIL,
-    password: process.env.PASSWORD,
-    version: '1.17.1',
-    auth: 'microsoft'
-};
-
-let bot = mineflayer.createBot(options);
-
-bot.on('spawn', () => {
-    console.log('spawned');
-});
-
-bot.on('kicked', (err) => {
-    console.error(err);
-    process.exit(1);
-});
-bot.on('error', (err) => {
-    console.error(err);
-    process.exit(1);
-});
-
-bot.on('message', (jsonMsg) => {
-    if (!channel) return;
-    if (jsonMsg.translate) {
-        if (jsonMsg.with) return channel.send(`(${jsonMsg.translate}: ${jsonMsg.with.map(x => x.text).join(', ')})`).catch(console.error);
-        return channel.send(`(${jsonMsg.translate})`).catch(console.error);
-    }
-    if (jsonMsg.extra) {
-        channel.send(jsonMsg.extra.map(x => x.bold ? `**${x.text}**` : x.text).join('')).catch(console.error);
-        return;
-    }
-    if (jsonMsg.text) {
-        channel.send(jsonMsg.text).catch(console.error);
-        return;
-    }
-    console.log(jsonMsg);
-})
+const bots = new Map();
+const emails = new Map(process.env.EMAILS.split(';;;').map(x => x.split(':::')));
+const passwords = new Map(process.env.PASSWORDS.split(';;;').map(x => x.split(':::')));
 
 client.on('ready', () => {
     console.log('discord bot ready');
@@ -59,12 +23,57 @@ client.on('messageCreate', message => {
     if (message.channel.id !== process.env.CHANNEL || message.author.bot) return;
     if (message.content.startsWith('!')) {
         return bot.chat('/' + message.content.slice(1));
+    } else if (message.content.startsWith('.login ')) {
+        const username = message.content.split(' ')[1];
+        const options = {
+            host: process.env.HOST,
+            username: emails.get(username),
+            password: passwords.get(username),
+            version: '1.18.1',
+            auth: 'microsoft'
+        };
+        
+        let bot = mineflayer.createBot(options);
+        
+        bots.set(username, bot);
+
+        bot.on('spawn', () => {
+            console.log('spawned');
+        });
+
+        bot.on('kicked', (err) => {
+            console.error(err);
+            process.exit(1);
+        });
+        bot.on('error', (err) => {
+            console.error(err);
+            process.exit(1);
+        });
+        
+        bot.on('message', (jsonMsg) => {
+            if (!channel) return;
+            if (jsonMsg.translate) {
+                if (jsonMsg.with) return channel.send(`(${jsonMsg.translate}: ${jsonMsg.with.map(x => x.text).join(', ')})`).catch(console.error);
+                return channel.send(`(${jsonMsg.translate})`).catch(console.error);
+            }
+            if (jsonMsg.extra) {
+                channel.send(jsonMsg.extra.map(x => x.bold ? `**${x.text}**` : x.text).join('')).catch(console.error);
+                return;
+            }
+            if (jsonMsg.text) {
+                channel.send(jsonMsg.text).catch(console.error);
+                return;
+            }
+            console.log(jsonMsg);
+        });
     }
     bot.chat(emoji.unemojify(message.content));
 });
 
-app.get('/', (req, res) => {
+app.get('/:username', (req, res) => {
     if (req.headers.authorization !== process.env.TOKEN) return res.status(403).send('go away');
+    const bot = bots.get(req.params.username);
+    if (!bot) return res.status(404).send('404');
     res.send({
         health: bot.health,
         hunger: bot.food,
