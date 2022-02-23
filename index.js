@@ -63,7 +63,7 @@ client.on('messageCreate', message => {
             console.log(jsonMsg);
         });
     }
-    bot.chat(emoji.unemojify(message.content));
+    bots.get(message.content.split(':')[0]).chat(emoji.unemojify(message.content.split(':').slice(1).join(':')));
 });
 
 app.get('/:username', (req, res) => {
