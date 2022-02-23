@@ -11,8 +11,6 @@ const app = express();
 const port = 3170;
 
 const bots = new Map();
-const emails = new Map(process.env.EMAILS.split(';;;').map(x => x.split(':::')));
-const passwords = new Map(process.env.PASSWORDS.split(';;;').map(x => x.split(':::')));
 
 client.on('ready', () => {
     console.log('discord bot ready');
@@ -27,8 +25,6 @@ client.on('messageCreate', message => {
         const username = message.content.split(' ')[1];
         const options = {
             host: process.env.HOST,
-            username: emails.get(username),
-            password: passwords.get(username),
             version: '1.18.1',
             auth: 'microsoft'
         };
