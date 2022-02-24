@@ -12,6 +12,17 @@ const port = 3170;
 
 const bots = new Map();
 
+let listening = false;
+console.info = (...data) => {
+    if (listening) {
+        listening = false;
+        client.emit('msaCode', data);
+    } else if (data.includes('[msa] First time signing in. Please authenticate now:')) {
+        listening = true;
+    }
+    console.log(...data);
+}
+
 client.on('ready', () => {
     console.log('discord bot ready');
     channel = client.channels.cache.get(process.env.CHANNEL);
@@ -62,7 +73,14 @@ client.on('messageCreate', message => {
         });
     } else if (message.content.split(':').length > 1) {
         bots.get(message.content.split(':')[0]).chat(emoji.unemojify(message.content.split(':').slice(1).join(':')));
+    } else if (message.content.startsWith('.logout ')) {
+        const username = message.content.split(' ')[1];
+        bots.get(username).quit();
     }
+});
+
+client.on('msaCode', msg => {
+    channel.send(msg.join('\n'));
 });
 
 app.get('/:username', (req, res) => {
