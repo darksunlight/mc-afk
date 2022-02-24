@@ -76,6 +76,7 @@ client.on('messageCreate', message => {
     } else if (message.content.startsWith('.logout ')) {
         const username = message.content.split(' ')[1];
         bots.get(username).quit();
+        message.channel.send(`Logging out from ${username}...`);
     }
 });
 
