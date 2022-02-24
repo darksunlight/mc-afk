@@ -19,9 +19,7 @@ client.on('ready', () => {
 
 client.on('messageCreate', message => {
     if (message.channel.id !== process.env.CHANNEL || message.author.bot) return;
-    if (message.content.startsWith('!')) {
-        return bot.chat('/' + message.content.slice(1));
-    } else if (message.content.startsWith('.login ')) {
+    if (message.content.startsWith('.login ')) {
         const username = message.content.split(' ')[1];
         const options = {
             host: process.env.HOST,
@@ -62,8 +60,9 @@ client.on('messageCreate', message => {
             }
             console.log(jsonMsg);
         });
+    } else if (message.content.split(':').length > 1) {
+        bots.get(message.content.split(':')[0]).chat(emoji.unemojify(message.content.split(':').slice(1).join(':')));
     }
-    bots.get(message.content.split(':')[0]).chat(emoji.unemojify(message.content.split(':').slice(1).join(':')));
 });
 
 app.get('/:username', (req, res) => {
