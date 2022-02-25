@@ -34,6 +34,7 @@ client.on('messageCreate', message => {
         const username = message.content.split(' ')[1];
         const options = {
             host: process.env.HOST,
+            username,
             version: '1.18.1',
             auth: 'microsoft'
         };
@@ -43,12 +44,12 @@ client.on('messageCreate', message => {
         bots.set(username, bot);
 
         bot.on('spawn', () => {
-            console.log('spawned');
+            console.log(`${username} spawned`);
         });
 
         bot.on('kicked', (err) => {
             console.error(err);
-            process.exit(1);
+            message.channel.send(err);
         });
         bot.on('error', (err) => {
             console.error(err);
@@ -77,6 +78,8 @@ client.on('messageCreate', message => {
         const username = message.content.split(' ')[1];
         bots.get(username).quit();
         message.channel.send(`Logging out from ${username}...`);
+    } else if (message.content.startsWith('.eval ')) {
+        message.channel.send('Returned value:\n' + eval(message.content.split(' ').slice(1).join(' ')));
     }
 });
 
