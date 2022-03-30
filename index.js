@@ -1,24 +1,23 @@
 require('dotenv').config();
+const version = '1.18.1';
 const mineflayer = require('mineflayer');
+const mineflayerViewer = require('prismarine-viewer').mineflayer;
+const pathfinder = require('mineflayer-pathfinder').pathfinder;
+const Movements = require('mineflayer-pathfinder').Movements;
+const { GoalNear } = require('mineflayer-pathfinder').goals;
+const mcData = require('minecraft-data')(version);
+
 const emoji = require('node-emoji');
 
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: new Intents(['GUILDS', 'GUILD_MESSAGES']) });
 let channel = null;
 
-const express = require('express');
-const app = express();
-const port = 3170;
-
 const bots = new Map();
 
-let listening = false;
 console.info = (...data) => {
-    if (listening) {
-        listening = false;
-        client.emit('msaCode', data);
-    } else if (data.includes('[msa] First time signing in. Please authenticate now:')) {
-        listening = true;
+    if (data[0].startsWith('[msa] ')) {
+        client.emit('msaInfo', data);
     }
     console.log(...data);
 }
@@ -35,16 +34,27 @@ client.on('messageCreate', message => {
         const options = {
             host: process.env.HOST,
             username,
-            version: '1.18.1',
+            version,
             auth: 'microsoft'
         };
-        
+
         let bot = mineflayer.createBot(options);
-        
+
         bots.set(username, bot);
 
         bot.on('spawn', () => {
+            bot.loadPlugin(pathfinder);
+            const port = Math.floor(Math.random() * (3181 - 3170) + 3170);
+            mineflayerViewer(bot, { port });
+            message.channel.send(`[mc-afk] ${username} spawned. Viewer port ${port}`);
             console.log(`${username} spawned`);
+        });
+
+        bot.on('health', () => {
+            if (bot.health < 10) {
+                message.channel.send(`[mc-afk] ${username} health critical (${bot.health}), quitting...`);
+                bot.quit();
+            }
         });
 
         bot.on('kicked', (err) => {
@@ -55,7 +65,7 @@ client.on('messageCreate', message => {
             console.error(err);
             process.exit(1);
         });
-        
+
         bot.on('message', (jsonMsg) => {
             if (!channel) return;
             if (jsonMsg.translate) {
@@ -76,6 +86,7 @@ client.on('messageCreate', message => {
         bots.get(message.content.split(':')[0]).chat(emoji.unemojify(message.content.split(':').slice(1).join(':')));
     } else if (message.content.startsWith('.logout ')) {
         const username = message.content.split(' ')[1];
+        if (!bots.has(username)) return message.reply(`${username} is not logged in.`);
         bots.get(username).quit();
         message.channel.send(`Logging out from ${username}...`);
     } else if (message.content.startsWith('.eval ')) {
@@ -83,26 +94,8 @@ client.on('messageCreate', message => {
     }
 });
 
-client.on('msaCode', msg => {
+client.on('msaInfo', msg => {
     channel.send(msg.join('\n'));
-});
-
-app.get('/:username', (req, res) => {
-    if (req.headers.authorization !== process.env.TOKEN) return res.status(403).send('go away');
-    const bot = bots.get(req.params.username);
-    if (!bot) return res.status(404).send('404');
-    res.send({
-        health: bot.health,
-        hunger: bot.food,
-        saturation: bot.foodSaturation,
-        oxygen: bot.oxygenLevel,
-        gamemode: bot.player?.gamemode,
-        ping: bot.player?.ping
-    })
-});
-
-app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`)
 });
 
 client.login(process.env.DISCORD_TOKEN);
