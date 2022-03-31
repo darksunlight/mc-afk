@@ -87,7 +87,9 @@ client.on('messageCreate', message => {
     } else if (message.content.startsWith('.logout ')) {
         const username = message.content.split(' ')[1];
         if (!bots.has(username)) return message.reply(`${username} is not logged in.`);
-        bots.get(username).quit();
+        const bot = bots.get(username);
+        bot.viewer.close();
+        bot.quit();
         message.channel.send(`Logging out from ${username}...`);
     } else if (message.content.startsWith('.eval ')) {
         message.channel.send('Returned value:\n' + eval(message.content.split(' ').slice(1).join(' ')));
