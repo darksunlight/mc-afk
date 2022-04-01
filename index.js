@@ -12,6 +12,7 @@ const emoji = require('node-emoji');
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: new Intents(['GUILDS', 'GUILD_MESSAGES']) });
 let channel = null;
+let port = 3170;
 
 const bots = new Map();
 
@@ -44,10 +45,10 @@ client.on('messageCreate', message => {
 
         bot.on('spawn', () => {
             bot.loadPlugin(pathfinder);
-            const port = Math.floor(Math.random() * (3181 - 3170) + 3170);
             mineflayerViewer(bot, { port });
             message.channel.send(`[mc-afk] ${username} spawned. Viewer port ${port}`);
             console.log(`${username} spawned`);
+            port++;
         });
 
         bot.on('health', () => {
