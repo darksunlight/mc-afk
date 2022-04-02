@@ -1,5 +1,5 @@
 require('dotenv').config();
-const version = '1.18.1';
+const version = '1.18.2';
 const mineflayer = require('mineflayer');
 const mineflayerViewer = require('prismarine-viewer').mineflayer;
 const pathfinder = require('mineflayer-pathfinder').pathfinder;
