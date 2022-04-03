@@ -102,3 +102,8 @@ client.on('msaInfo', msg => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
+
+process.on('uncaughtException', e => {
+    channel.send(String(e));
+    process.exit(1);
+});
