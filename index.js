@@ -17,7 +17,7 @@ let port = 3170;
 const bots = new Map();
 
 console.info = (...data) => {
-    if (data[0].startsWith('[msa] ')) {
+    if (data[0].startsWith('[msa] ') || data[0].includes('https://www.microsoft.com/link')) {
         client.emit('msaInfo', data);
     }
     console.log(...data);
